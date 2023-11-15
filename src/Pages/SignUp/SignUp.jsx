@@ -4,9 +4,13 @@ import { useForm } from "react-hook-form";
 import { AuthContext } from "../../providers/AuthProvider";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import useAxiosPublic from "../../hooks/useAxiosPublic";
+import SocialLogin from "../../Components/SocialLogin/SocialLogin";
 
 
 const SignUp = () => {
+
+  const axiosPublic = useAxiosPublic();
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
@@ -16,7 +20,7 @@ const SignUp = () => {
 
   const onSubmit = (data) => {
 
-    console.log(data)
+
     createUser(data.email, data.password)
       .then(result => {
         const loggedUser = result.user;
@@ -24,25 +28,36 @@ const SignUp = () => {
         upDateUserProfile(data.name, data.photoURL)
           .then(() => {
             console.log('user profile info updated')
-            reset()
-            Swal.fire({
-              title: "User created successfully",
-              showClass: {
-                popup: `
-      animate__animated
-      animate__fadeInUp
-      animate__faster
-    `
-              },
-              hideClass: {
-                popup: `
-      animate__animated
-      animate__fadeOutDown
-      animate__faster
-    `
-              }
-            });
-            navigate('/')
+            const userInfo = {
+              name: data.name,
+              email: data.email
+            }
+
+            axiosPublic.post('/users', userInfo)
+              .then(res => {
+                if (res.data.insertedId) {
+                  console.log('user added to the database');
+                  reset()
+                  Swal.fire({
+                    title: "User created successfully",
+                    showClass: {
+                      popup: `
+          animate__animated
+          animate__fadeInUp
+          animate__faster
+        `
+                    },
+                    hideClass: {
+                      popup: `
+          animate__animated
+          animate__fadeOutDown
+          animate__faster
+        `
+                    }
+                  });
+                  navigate('/');
+                }
+              })
           })
           .catch(error => console.log(error))
       })
@@ -113,7 +128,8 @@ const SignUp = () => {
 
               </div>
             </form>
-            <p><small>Already have an account <Link to="/login">Login</Link></small></p>
+            <p className="px-6 pb-6"><small>Already have an account ? <Link className="text-red-600 font-bold" to="/login">Login</Link></small></p>
+            <SocialLogin></SocialLogin>
           </div>
         </div>
       </div>
